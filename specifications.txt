@@ -1,0 +1,85 @@
+Block Size : 512 bytes
+
+No of Files : 150
+
+Max size of file name: 52 characters 
+
+Size of file : arbitrary (malloc or better allocation policy)
+
+Basic Metadata of a file: 
+owner
+group
+permission
+filesize
+Times:
+create_time
+modify_time
+access_time
+
+
+Occupied 1
+free 0
+
+directory 1
+file 0
+
+block_size 1024
+buffer_size 1024
+
+inode_size = 18
+
+
+
+INODE_structure:
+{
+	 i_mode; //mode
+	 i_uid; //uid of file owner
+	 i_size; //filesize
+
+	 i_atime; //access time of file
+	 i_ctime; //change of inode/create
+	 i_mtime; //file modified
+	 i_dtime; 
+
+	 i_gid; //group number
+	 i_links_count; //how many links to this file
+	 i_blocks; // no of blocks 
+	 i_flags; 
+	 i_osd1;
+
+	 i_direct[12]; //direct pointers
+	 i_indirect; // indirection
+	 i_d_indirect; // double indirection
+	 i_t_indirect; //triple indirection
+
+	 i_generation; //file generation number
+	 i_file_acl;
+	 i_dir_acl;
+	 i_faddr;
+	 i_osd2_1;
+	 i_osd2_2;
+	 i_osd2_3;
+
+}
+
+
+Directory_entry:
+{
+	inode // number
+
+	rec_len //dirent length
+	name_len //name length
+	file_type
+
+	name[255] //file name
+
+	block_no
+	offset
+}
+
+file_handle:
+{
+	inode
+	size
+	blocks_count
+}
