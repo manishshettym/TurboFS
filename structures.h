@@ -4,7 +4,7 @@
 #define uint8 uint8_t
 
 #define MAX_NAME_LEN 255
-#define NDIRECT_BLOCKS 12
+#define NO_OF_DIRECT_BLOCKS 12
 
 
 struct t_inode
@@ -16,20 +16,20 @@ struct t_inode
 	uint32 i_size; //size of file
 
 	//times:
-	uint32 i_atime;
-	uint32 i_ctime;
-	uint32 i_mtime;
-	uint32 i_dtime;
+	uint32 i_atime; //arrival
+	uint32 i_ctime; //created
+	uint32 i_mtime; //modified
+	uint32 i_dtime; //deleted
 
 	
-	uint16 i_links_count;
-	uint32 i_blocks;
-	uint32 i_flags;
+	uint16 i_links_count; //count of links
+	uint32 i_blocks; //count of blocks
+	uint32 i_flags; //flags for the inode
 
-	uint32 i_direct[NDIRECT_BLOCKS];
-	uint32 i_indirect;
-	uint32 i_double_indirect;
-	uint32 i_triple_indirect;
+	uint32 i_direct[NO_OF_DIRECT_BLOCKS]; // allocated array for direct pointers
+	uint32 i_indirect; //no of single indirect
+	uint32 i_double_indirect; //no of double indirect
+	uint32 i_triple_indirect; // no of triple indirect
 
 	/*
 	uint32 i_osd1;

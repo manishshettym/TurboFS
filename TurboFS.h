@@ -12,3 +12,9 @@
 #include <sys/types.h>
 
 
+#define ROOT_INO 2
+#define ENTRY_DIR 2
+#define ENTRY_FILE 1
+#define ENTRY_BASE_SIZE 8
+
+static const int print_logs = 0;

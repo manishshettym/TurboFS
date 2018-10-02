@@ -54,19 +54,24 @@ struct t_inode *read_inode(uint32 inode_no)
 
 
 /*FUSE FUNCTIONS*/
+//Following the fuse.h file for any details !!!!!
 
 
-void turbo_init()
+void turbo_init(struct fuse_conn_info *conn)
+{
+
+
+
+
+}
+
+int turbo_get_attr(const char *path, struct stat *statbuf)
 {
 
 }
 
-int turbo_get_attr()
-{
-
-}
-
-int turbo_read_dir()
+int turbo_read_dir(const char *path, void *buf, fuse_fill_dir_t filler,
+ 						off_t offset,struct fuse_file_info *fileInfo)
 {
 
 }
