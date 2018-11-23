@@ -15,6 +15,16 @@
 #include "turbofs.h"
 
 
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37m"
+#define RESET "\x1B[0m"
+#define BOLD  "\x1b[1m"
+
 
  static struct fuse_operations turbo_oper = 
  {
@@ -37,9 +47,9 @@
 
  //Inode related Functions
  int initialise_inodes(int* i);
- int initialise_freemap(int* map);
+ int initialise_data_map(int* map);
  int return_first_unused_inode(int* i);
- int return_offset_of_first_free_datablock(int *freemap);
+ int return_offset_of_first_free_datablock(int *data_map);
  int isDir(char *path);
  void path_to_inode(const char* path, int *ino);
  void allocate_inode(char *path, int *ino, bool dir);
@@ -51,7 +61,7 @@
  int *inode_map;// inode bitmap
  inode *inodes;// The start of the inode block
 
- int *freemap;//The start of the databitmap block
+ int *data_map;//The start of the databitmap block
  char *datablks;//The start of the data_blockss
 
  dirent *root_directory; // Address of the block representing the root directory
@@ -68,24 +78,22 @@ int main(int argc, char *argv[])
 
 
   #ifdef DEBUG
-    printf("TurboFS secondary disk size = %d\n", buf.st_size); 
+    printf( BLU BOLD "TurboFS secondary disk size = %d\n" RESET, buf.st_size); 
   #endif
 
-    printf("Superblock size = %d\n", superblock_size);
-    printf("Block size = %d\n\n", block_size);
+    printf(GRN BOLD "Superblock size = %d\n" RESET, superblock_size);
+    printf(GRN BOLD "Block size = %d\n\n", block_size);
 
-    printf("Total no of inodes = %d\n",N_INODES);
-    printf("Size of inode = %d\n",sizeof(inode));
-    printf("Inode Blocks = %d\n", INODE_BLKS);
-    printf("Inode_Bitmap size(blocks)= %d\n\n",INODE_MAP_BLKS);
-
-
-    printf("Total no of datablocks= %d\n", DBLKS);
-    printf("Data_Bitmap size(blocks) = %d\n\n",FREEMAP_BLKS);
+    printf(GRN BOLD "Total no of inodes = %d\n" RESET,N_INODES);
+    printf(GRN BOLD "Size of inode = %d\n" RESET,sizeof(inode));
+    printf(GRN BOLD "Inode Blocks = %d\n" RESET, INODE_BLKS);
+    printf(GRN BOLD "Inode_Bitmap size(blocks)= %d\n"RESET,INODE_MAP_BLKS);
+    printf(GRN BOLD "Total no of datablocks= %d\n" RESET, DBLKS);
+    printf(GRN BOLD "Data_Bitmap size(blocks) = %d\n\n" RESET,DATA_MAP_BLKS);
 
 
 
-    printf("Total File System Size = %d\n\n\n",FS_SIZE);
+    printf(BLU BOLD "Total File System Size = %d\n\n\n" RESET,FS_SIZE);
 
     
 
@@ -100,8 +108,8 @@ int main(int argc, char *argv[])
   //allocating the right memory
   inode_map = (int *)fs;
   inodes = (inode *)(inode_map + INODE_BLKS * block_size);
-  freemap = (int *)(inodes + N_INODES * sizeof(inode));
-  datablks = (char *)(freemap + FREEMAP_BLKS * block_size);
+  data_map = (int *)(inodes + N_INODES * sizeof(inode));
+  datablks = (char *)(data_map + DATA_MAP_BLKS * block_size);
 
   //logging the starting addresses
 
@@ -110,13 +118,13 @@ int main(int argc, char *argv[])
   printf("fs = %u\n", fs);
   printf("inode_map = %u\n", inode_map);
   printf("inodes = %u\n", inodes);
-  printf("freemap = %u\n", freemap);
+  printf("data_map = %u\n", data_map);
   printf("datablks = %u\n", datablks);
 
   if(buf.st_size == 0)
   {
     initialise_inodes(inode_map);
-    initialise_freemap(freemap);
+    initialise_data_map(data_map);
   }
 
   printf("TurboFS initializing ... ...\n\n");
@@ -148,8 +156,8 @@ int initialise_inodes(int* i)
 
 //data bit map for each datablock
 //last block has -1 indicating it is the end( no more free blocks)
-int initialise_freemap(int* map){
-	// Initalise the freemap
+int initialise_data_map(int* map){
+	// Initalise the data_map
 	int x;
 	for(x = 0; x < DBLKS; x++)
   {
@@ -179,15 +187,15 @@ int return_first_unused_inode(int* i)
 
 //free data block function to search the data bitmap
 
-int return_offset_of_first_free_datablock(int *freemap)
+int return_offset_of_first_free_datablock(int *data_map)
 {
 	int i;
 	for(i = 1; i < DBLKS; i++)
   {
-		//printf("%d\n", freemap[i]);
-		if(freemap[i] == 1)
+		//printf("%d\n", data_map[i]);
+		if(data_map[i] == 1)
     {
-			freemap[i] = 0; //mark it as used now
+			data_map[i] = 0; //mark it as used now
 			return (i);
 		}
 	}
@@ -228,14 +236,14 @@ void path_to_inode(const char* path, int *ino)
         //if reached end of the path and temp is empty => NOT FOUND
   			if(strcmp(temp -> filename, "") == 0)
         {
-  				printf("Cannot find Inode @%s\n", path);
+  				//printf("Cannot find Inode @%s\n", path);
   				*ino = -1;
   			}
 
 
   			else
         {
-          printf("INODE has been FOUND !!! \n\n\n");
+          printf( MAG BOLD "INODE has been FOUND !!! \n\n" RESET);
 
   				*ino = (temp -> file_inode);
           inode *temp_ino = inodes + ((*ino) * sizeof(inode));
@@ -344,7 +352,7 @@ void allocate_inode(char *path, int *ino, bool dir)
 
 	temp_ino -> id = rand() % 5000;
 	temp_ino -> size = 0;
-	temp_ino -> data = return_offset_of_first_free_datablock(freemap);
+	temp_ino -> data = return_offset_of_first_free_datablock(data_map);
 	temp_ino -> directory = dir;
 	temp_ino -> last_accessed = 0;
 	temp_ino -> last_modified = 0;
@@ -364,6 +372,7 @@ void allocate_inode(char *path, int *ino, bool dir)
 //print inode related things
 void print_inode(inode *i)
 {
+  printf(RED BOLD);
 	printf("used : %d\n", i -> used);
 	printf("id : %d\n", i -> id);
 	printf("size : %d\n", i -> size);
@@ -372,6 +381,7 @@ void print_inode(inode *i)
 	printf("last_accessed : %d\n", i -> last_accessed);
 	printf("last_modified : %d\n", i -> last_modified);
 	printf("link_count : %d\n", i -> link_count);
+  printf(RESET);
 }
 
 
@@ -397,6 +407,7 @@ void print_inode(inode *i)
   	memset(stbuf, 0, sizeof(struct stat));
 
   	int ino;
+    //printf(GRN BOLD "getattr calling path_to_inode\n" RESET);
   	path_to_inode(path, &ino); //find inode using the path
 
   	
@@ -434,6 +445,7 @@ void print_inode(inode *i)
   	
 
   	int ino; //inode index in the array
+    //printf(GRN BOLD "readdir calling path_to_inode\n" RESET);
   	path_to_inode(path, &ino);// read the path to find the inode
 
   	//printf("ino returned for %s - %d\n", path, ino);
@@ -573,6 +585,7 @@ void print_inode(inode *i)
     //get inode number using the original path given -> and thus the dirent
     else
     {
+      printf(GRN BOLD "rmdir calling path_to_inode\n" RESET);
       path_to_inode(subpath, &ino);
       //printf("Inode for the path - %s - %d\n", path, ino);
 
@@ -617,7 +630,7 @@ void print_inode(inode *i)
         //if it is empty -> free the bitmaps(inode and the databitmap)
 
   			strcpy(temp ->filename, "");
-  			freemap[(temp_ino -> data)] = 1;
+  			data_map[(temp_ino -> data)] = 1;
   			inode_map[(temp -> file_inode)] = 0;
 
   		}
@@ -693,6 +706,7 @@ void print_inode(inode *i)
   static int turbo_open(const char *path, struct fuse_file_info *fi)
   {
   	int ino;
+    printf(GRN BOLD "open calling path_to_inode\n" RESET);
   	path_to_inode(path, &ino);
   	//printf("inode returned = %u\n", ino);
 
@@ -708,6 +722,7 @@ void print_inode(inode *i)
   static int turbo_read(const char *path, char *buf, size_t size, off_t offset,struct fuse_file_info *fi)
   {
   	int ino;
+    printf(GRN BOLD "read calling path_to_inode\n" RESET);
   	path_to_inode(path, &ino);
   	size_t len;
   	(void) fi;
@@ -739,6 +754,7 @@ void print_inode(inode *i)
   	//printf("Write called!!\n");
   	
   	int ino;
+    printf(GRN BOLD "write calling path_to_inode\n" RESET);
   	path_to_inode(path, &ino);
     inode *temp_ino = inodes + (ino * sizeof(inode));
   	memcpy(((datablks + ((temp_ino -> data) * block_size)) + offset), (buf), size);
@@ -785,6 +801,7 @@ void print_inode(inode *i)
     //original path
     else
     {
+      printf(GRN BOLD "rm calling path_to_inode\n" RESET);
       path_to_inode(subpath, &ino);
      // printf("Inode for the path - %s - %d\n", path, ino);
 
@@ -811,7 +828,7 @@ void print_inode(inode *i)
         temp_ino = inodes + ((temp -> file_inode) * sizeof(inode));
         temp_data = ((dirent *)(datablks + ((temp_ino -> data) * block_size)));
   			strcpy(temp ->filename, "");
-  			//freemap[(temp_ino -> data)] = 1;
+  			//data_map[(temp_ino -> data)] = 1;
   			inode_map[(temp -> file_inode)] = 0;
   		}
   	}
